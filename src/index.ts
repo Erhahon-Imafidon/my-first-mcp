@@ -34,6 +34,7 @@ server.registerTool(
     }
 )
 
+
 server.registerTool(
     "get_github_repos",
     {
@@ -43,30 +44,26 @@ server.registerTool(
         })
     },
     async ({username}) => {
-        const allRepos: any[] = [];
-        let page = 1;
-        const perPage = 100; // GitHub max per page
+        const req = await fetch(`${GITHUB_API_URL}/${username}/repos?per_page=100&page=1`, {
+            headers: {
+                "User-Agent": "Mcp-Server"
+            }
+        });
 
-        while (true) {
-            const req = await fetch(`${GITHUB_API_URL}/${username}/repos?per_page=${perPage}&page=${page}`, {
-                headers: {"User-Agent": "MCP-Server"}
-            });
+        if (!req.ok) {
+            return {
+                content: [{type: "text", text: `Error fetching repos for user ${username}`}]
+            }
+        };
 
-            if (!req.ok) throw new Error('Failed to fetch repositories from GitHub API');
+        const repos = await req.json();
 
-            const res = await req.json();
-            if (res.length === 0) break;
-
-            allRepos.push(...res);
-            if (res.length < perPage) break; // No more pages
-            page++;
-        }
-
-        const repoList = allRepos.map((repo:any, index:number) => `${index + 1}. ${repo.name}`).join("\n\n");
+        const repoList = repos.map((repo: any, index: number) => `${index + 1}. ${repo.name}`).join("\n\n");
 
         return {
-            content: [{type: "text", text: `Repositories for user ${username}: (${allRepos.length} repos): \n\n${repoList}`}]
+            content: [{type: "text", text: `Repositories for user ${username}: (${repos.length} repos): \n\n${repoList}`}]
         }
+
     }
 )
 
