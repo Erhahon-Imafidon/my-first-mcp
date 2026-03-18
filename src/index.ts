@@ -1,6 +1,10 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
+import * as path from "path";
+import * as fs from "fs/promises";
+import { fileURLToPath } from "url";
+
 
 
 const GITHUB_API_URL = "https://api.github.com/users";
@@ -12,7 +16,8 @@ const server = new McpServer(
     },
     {
         capabilities: {
-            tools: {}
+            tools: {},
+           
         }
     }
 );
@@ -67,6 +72,35 @@ server.registerTool(
     }
 )
 
+
+server.registerResource(
+    "apartment_rules",
+    "rules://all",
+    {
+        description: "Resource for all apartment rules",
+        mimeType: "text/plain",
+    },
+     async (uri) => {
+      const uriString = uri.toString();
+        const __filename = fileURLToPath(import.meta.url);
+        const __dirname = path.dirname(__filename);
+
+        const rules = await fs.readFile(path.resolve(__dirname, "../src/data/rules.doc"), "utf-8")
+    
+        return {
+            contents: [
+                {
+                    uri: uriString,
+                    mimeType: 'text/plain',
+                    text: rules
+                }
+            ]
+        }
+     }
+)
+
+
+
 async function main() {
     const transport = new StdioServerTransport();
     await server.connect(transport);
@@ -76,3 +110,5 @@ main().catch((error) => {
     console.error("Error in main!:", error);
     process.exit(1);
 }) 
+
+
