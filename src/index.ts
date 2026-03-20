@@ -99,6 +99,33 @@ server.registerResource(
      }
 )
 
+server.registerPrompt(
+    "explain-sql",
+    {
+        title: "Explain SQL Query",
+        description: "A prompt to explain an SQL query in simple terms.",
+        argsSchema: {
+            sql: z.string().describe("The SQL query to explain")
+        }
+    },
+    async ({sql}) => {
+       
+        return {
+             messages: [
+            {
+                role: "user",
+                content: {
+                    type: "text",
+                    text: `Give me a detailed explanation of the following SQL query in plain English: ${sql} Make it very detailed and specific for a beginner to understand.`
+                }
+            }
+        ]
+        }
+    }
+)
+
+
+
 
 
 async function main() {
